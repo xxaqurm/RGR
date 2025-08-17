@@ -1,0 +1,10 @@
+build/
+bin/
+
+*.exe
+*.dll
+*.so
+*.a
+*.lib
+
+.vscode/
