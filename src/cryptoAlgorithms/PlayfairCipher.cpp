@@ -20,10 +20,16 @@ ByteArray getKeyBytesPlayfair() {
     /* Преобразует строку-ключ в вектор байтов */
     wstring key;
     while (key.empty()) {
-        wcout << L"Введите ключевое слово для шифрования/дешифрования: ";
+        wcout << L"Введите ключевое слово на латинице для шифрования/дешифрования: ";
         getline(wcin, key);
     }
-    return ByteArray(key.begin(), key.end());
+
+    ByteArray result;
+    result.reserve(key.size());
+    for (wchar_t ch : key) {
+        result.push_back(static_cast<Byte>(ch & 0xFF));
+    }
+    return result;
 }
 
 ByteArray readBinaryFilePlayfair(const string filePath) {
@@ -62,7 +68,7 @@ bool findMatch(const ByteArray bytes, const Byte b) {
     return false;
 }
 
-ByteMatrix genKeyMatrix(const ByteArray& key) {
+ByteMatrix genKeyMatrix(const ByteArray key) {
     ByteArray usedBytes;
     for (Byte b : key) {
         if (!findMatch(usedBytes, b)) {
@@ -71,8 +77,8 @@ ByteMatrix genKeyMatrix(const ByteArray& key) {
     }
 
     for (int b = 0; b < 256; b++) {
-        if (!findMatch(usedBytes, b)) {
-            usedBytes.push_back(b);
+        if (!findMatch(usedBytes, static_cast<Byte>(b))) {
+            usedBytes.push_back(static_cast<Byte>(b));
         }
     }
 
@@ -87,60 +93,56 @@ ByteMatrix genKeyMatrix(const ByteArray& key) {
 
 vector<Bigram> splitToBigrams(const ByteArray content) {
     vector<Bigram> bigrams;
+    bigrams.reserve((content.size() + 1) / 2);
+
     size_t idx = 0;
-
     while (idx < content.size()) {
-        Byte first = content[idx];
-        Byte second = 0;
-
-        if (idx + 1 < content.size()) {
-            second = content[idx + 1];
-            idx += 2;
-        } else {
-            second = first;
-            idx++;
-        }
-
+        Byte first = content[idx++];
+        Byte second = (idx < content.size()) ? content[idx++] : 0xFF;
         bigrams.push_back({first, second});
     }
     return bigrams;
 }
 
 ByteArray addSplitterToContent(const ByteArray content) {
-    Byte splitter = 127;
-    ByteArray contentWithSplitter;
-    for (size_t i = 0; i < content.size() - 1; i++) {
-        contentWithSplitter.push_back(content[i]);
+    Byte splitter = 0xFF;
+    if (content.empty()) return {};
+
+    ByteArray result;
+    result.reserve(content.size() + content.size() / 2 + 2);
+
+    for (size_t i = 0; i + 1 < content.size(); i++) {
+        result.push_back(content[i]);
         if (content[i] == content[i + 1]) {
-            contentWithSplitter.push_back(splitter);
+            result.push_back(splitter);
         }
     }
-    contentWithSplitter.push_back(content[content.size()-1]);
+    result.push_back(content.back());
 
-    if (contentWithSplitter.size() % 2)  {
-        contentWithSplitter.push_back(splitter);
+    if (result.size() % 2)  {
+        result.push_back(splitter);
     }
 
-    return contentWithSplitter;
+    return result;
 }
 
 ByteArray removeSplitterFromContent(const ByteArray content) {
-    Byte splitter = 127;
-    ByteArray contentWithoutSplitter;
-    for (size_t i = 0; i < content.size(); i++) {
-        if (content[i] != splitter) {
-            contentWithoutSplitter.push_back(content[i]);
+    Byte splitter = 0xFF;
+    ByteArray result;
+    result.reserve(content.size());
+    for (Byte b : content) {
+        if (b != splitter) {
+            result.push_back(b);
         }
     }
-
-    return contentWithoutSplitter;
+    return result;
 }
 
 pair<int, int> findIdxInKey(const ByteMatrix key, const Byte b) {
-    for (int i = 0; i < key.size(); i++) {
-        for (int j = 0; j < key.size(); j++) {
+    for (size_t i = 0; i < key.size(); i++) {
+        for (size_t j = 0; j < key.size(); j++) {
             if (key[i][j] == b) {
-                return {i, j};
+                return {(int)i, (int)j};
             }
         }
     }
@@ -150,8 +152,8 @@ pair<int, int> findIdxInKey(const ByteMatrix key, const Byte b) {
 
 ByteArray playfairEncryptBytes(const ByteArray content, const ByteMatrix key) {
     /* Шифрование */
-    ByteArray contentWithSplitter = addSplitterToContent(content);
-    vector<Bigram> bigrams = splitToBigrams(contentWithSplitter);
+    ByteArray withSplitter = addSplitterToContent(content);
+    vector<Bigram> bigrams = splitToBigrams(withSplitter);
     vector<Bigram> encryptBigrams(bigrams.size());
 
     for (size_t i = 0; i < bigrams.size(); i++) {
@@ -166,12 +168,12 @@ ByteArray playfairEncryptBytes(const ByteArray content, const ByteMatrix key) {
             secondElm = key[posSecondByte.first][posFirstByte.second];
         } else if (posFirstByte.first != posSecondByte.first && posFirstByte.second == posSecondByte.second) {
             // Берем нижние элементы столбца
-            firstElm = posFirstByte.first + 1 < key.size() ? key[posFirstByte.first + 1][posFirstByte.second] : key[0][posFirstByte.second];
-            secondElm = posSecondByte.first + 1 < key.size() ? key[posSecondByte.first + 1][posSecondByte.second] : key[0][posSecondByte.second];
+            firstElm = (posFirstByte.first + 1 < (int)key.size()) ? key[posFirstByte.first + 1][posFirstByte.second] : key[0][posFirstByte.second];
+            secondElm = (posSecondByte.first + 1 < (int)key.size()) ? key[posSecondByte.first + 1][posSecondByte.second] : key[0][posSecondByte.second];
         } else if (posFirstByte.first == posSecondByte.first && posFirstByte.second != posSecondByte.second) {
             // Берем правые элементы строки
-            firstElm = posFirstByte.second + 1 < key.size() ? key[posFirstByte.first][posFirstByte.second + 1] : key[posFirstByte.first][0];
-            secondElm = posSecondByte.second + 1 < key.size() ? key[posSecondByte.first][posSecondByte.second + 1] : key[posSecondByte.first][0];
+            firstElm = (posFirstByte.second + 1 < (int)key.size()) ? key[posFirstByte.first][posFirstByte.second + 1] : key[posFirstByte.first][0];
+            secondElm = (posSecondByte.second + 1 < (int)key.size()) ? key[posSecondByte.first][posSecondByte.second + 1] : key[posSecondByte.first][0];
         } else {  // один и тот же элемент
             wcerr << L"Error: something wrong (playfairEncryptBytes function)." << endl;
             return {};
@@ -179,12 +181,13 @@ ByteArray playfairEncryptBytes(const ByteArray content, const ByteMatrix key) {
         encryptBigrams[i] =  {firstElm, secondElm};
     }
 
-    ByteArray encryptContent;
-    for (size_t i = 0; i < encryptBigrams.size(); i++) {
-        encryptContent.push_back(encryptBigrams[i].first);
-        encryptContent.push_back(encryptBigrams[i].second);
+    ByteArray result;
+    result.reserve(encryptBigrams.size() * 2);
+    for (auto& bg : encryptBigrams) {
+        result.push_back(bg.first);
+        result.push_back(bg.second);
     }
-    return encryptContent;
+    return result;
 }
 
 ByteArray playfairDecryptBytes(const ByteArray content, const ByteMatrix key) {
@@ -204,12 +207,12 @@ ByteArray playfairDecryptBytes(const ByteArray content, const ByteMatrix key) {
             secondElm = key[posSecondByte.first][posFirstByte.second];
         } else if (posFirstByte.first != posSecondByte.first && posFirstByte.second == posSecondByte.second) {
             // Берем верхние элементы столбца
-            firstElm = posFirstByte.first - 1 >= 0 ? key[posFirstByte.first - 1][posFirstByte.second] : key[key.size() - 1][posFirstByte.second];
-            secondElm = posSecondByte.first + 1 >= 0 ? key[posSecondByte.first - 1][posSecondByte.second] : key[key.size() - 1][posSecondByte.second];
+            firstElm = (posFirstByte.first - 1 >= 0) ? key[posFirstByte.first - 1][posFirstByte.second] : key[key.size() - 1][posFirstByte.second];
+            secondElm = (posSecondByte.first - 1 >= 0) ? key[posSecondByte.first - 1][posSecondByte.second] : key[key.size() - 1][posSecondByte.second];
         } else if (posFirstByte.first == posSecondByte.first && posFirstByte.second != posSecondByte.second) {
             // Берем левые элементы строки
-            firstElm = posFirstByte.second - 1 >= 0 ? key[posFirstByte.first][posFirstByte.second - 1] : key[posFirstByte.first][key.size() - 1];
-            secondElm = posSecondByte.second - 1 >= 0 ? key[posSecondByte.first][posSecondByte.second - 1] : key[posSecondByte.first][key.size() - 1];
+            firstElm = (posFirstByte.second - 1 >= 0) ? key[posFirstByte.first][posFirstByte.second - 1] : key[posFirstByte.first][key.size() - 1];
+            secondElm = (posSecondByte.second - 1 >= 0) ? key[posSecondByte.first][posSecondByte.second - 1] : key[posSecondByte.first][key.size() - 1];
         } else {  // один и тот же элемент
             wcerr << L"Error: something wrong (playfairEncryptBytes function)." << endl;
             return {};
@@ -217,12 +220,13 @@ ByteArray playfairDecryptBytes(const ByteArray content, const ByteMatrix key) {
         decryptBigrams[i] =  {firstElm, secondElm};
     }
 
-    ByteArray decryptContent;
-    for (size_t i = 0; i < decryptBigrams.size(); i++) {
-        decryptContent.push_back(decryptBigrams[i].first);
-        decryptContent.push_back(decryptBigrams[i].second);
+    ByteArray result;
+    result.reserve(decryptBigrams.size() * 2);
+    for (auto& bg : decryptBigrams) {
+        result.push_back(bg.first);
+        result.push_back(bg.second);
     }
-    return removeSplitterFromContent(decryptContent);
+    return removeSplitterFromContent(result);
 }
 
 void playfairEncrypt(const string filePath, const string fileEncryptedPath) {
