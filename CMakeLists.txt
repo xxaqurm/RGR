@@ -24,10 +24,10 @@ add_library(VigenereCipher SHARED src/cryptoAlgorithms/VigenereCipher.cpp)
 target_include_directories(VigenereCipher PUBLIC include)
 
 # === Главный исполняемый файл ===
-add_executable(app main.cpp src/utils/menuUtils.cpp)
+add_executable(rgr main.cpp src/utils/menuUtils.cpp)
 
 # Линковка с библиотеками
-target_link_libraries(app
+target_link_libraries(rgr
     MatrixCipher
     PlayfairCipher
     VigenereCipher

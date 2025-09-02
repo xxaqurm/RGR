@@ -121,7 +121,7 @@ CryptoMode getCryptoMod() {
     wstring typeError = L"Введите целое число, а не строку.";
     wstring inputError = L"Введите 1 (шифрование) или 2 (дешифрование).";
     while (true) {
-        wcout << L"Выберите действие: ";
+        wcout << L"Ваш выбор: ";
         int userChoice = 0;
         try {
             wcin >> userChoice;
