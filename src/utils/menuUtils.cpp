@@ -4,11 +4,11 @@
 #include <string>
 #include <fstream>
 #include <map>
+#include <cstdint>
 
 #include "menuUtils.hpp"
 
 using namespace std;
-typedef unsigned long long ull;
 
 OS getOs() {
     #if defined(__linux__)
@@ -355,10 +355,10 @@ void addUserHash(string filePath, wstring hash) {
 }
 
 void simpleHash(wstring& userPassword) {
-    ull hash = 7392;
+    uint64_t hash = 7392;
 
     for (auto& symb : userPassword) {
-        hash = ((hash << 5) + hash) + (ull)symb;
+        hash = ((hash << 5) + hash) + (uint64_t)symb;
     }
     userPassword.clear();
 
