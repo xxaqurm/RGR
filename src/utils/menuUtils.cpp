@@ -1,78 +1,51 @@
-#include <iostream>
-#include <limits>
-#include <stdexcept>
-#include <string>
-#include <fstream>
-#include <map>
-#include <cstdint>
-
 #include "menuUtils.hpp"
 
-using namespace std;
-
-OS getOs() {
-    #if defined(__linux__)
-        return OS::Linux;
-    #elif defined(_WIN32)
-        return OS::Windows;
-    #else
-        return OS::Unknown;
-    #endif
-}
-
 void clearScreen() {
-    /* Очищает терминал */
-    if (getOs() == OS::Windows) {
-        system("cls");
-    } else if (getOs() == OS::Linux) {
-        system("clear");
-    } else {
-        wcerr << L"Unknown system." << endl;
-    }
+    system("clear");
 }
 
 void showMenu(const MenuMode mode) {
     /* Выводит меню пользователя на экран */
     switch (mode) {
         case MenuMode::StartMenu:
-            wcout << L"Выберите алгоритм шифрования / дешифрования:" << endl;
-            wcout << L"--- ВАЖНО! Алгоритм дешифрования должен совпадать с алгоритмом шифрования! ---" << endl;
-            wcout << L"1. Матричная шифровка" << endl;
-            wcout << L"2. Шифр Виженера" << endl;
-            wcout << L"3. Шифр Плейфера" << endl;
+            cout << "Выберите алгоритм шифрования / дешифрования:" << endl;
+            cout << "--- ВАЖНО! Алгоритм дешифрования должен совпадать с алгоритмом шифрования! ---" << endl;
+            cout << "1. Матричная шифровка" << endl;
+            cout << "2. Шифр Виженера" << endl;
+            cout << "3. Шифр Плейфера" << endl;
             break;
         case MenuMode::EncDecMenu:
-            wcout << L"Выберите действие:" << endl;
-            wcout << L"1. Шифрование" << endl;
-            wcout << L"2. Дешифрование" << endl;
+            cout << "Выберите действие:" << endl;
+            cout << "1. Шифрование" << endl;
+            cout << "2. Дешифрование" << endl;
             break;
         default:
-            wcout << L"Something wrong." << endl;
+            cout << "[ ERROR ] что-то пошло не так" << endl;
             break;
     }
 }
 
-void userInputError(const wstring errorText, const exception e, bool ignore = true) {
+void userInputError(const string errorText, const exception e, bool ignore = true) {
     /* Выводит ошибку для пользователя */
-    wcout << L">>> Ошибка: " << e.what() << L". " << errorText << endl;
-    wcin.clear();
-    if (ignore) wcin.ignore(numeric_limits<streamsize>::max(), '\n');
+    cout << "[ ERROR ] " << e.what() << ". " << errorText << endl;
+    cin.clear();
+    if (ignore) cin.ignore(numeric_limits<streamsize>::max(), '\n');
 }
 
 Algorithm getCryptoAlgorithm() {
     /* Пользовательский ввод (выбор алгоритма шифрования) */
-    wstring inputError = L"Введите целое число от 0 до 3.";
+    string inputError = "Введите целое число от 0 до 3.";
     while (true) {
-        wcout << L"Введите номер шифра или \"0\" для выхода: ";
+        cout << "Введите номер шифра или \"0\" для выхода: ";
         int userChoice = 0;
         try {
-            wcin >> userChoice;
+            cin >> userChoice;
             if (userChoice < 0 || userChoice > 3) {
                 throw invalid_argument("ivalid_user_choice");
             }
-            wcin.clear();
-            wcin.ignore(numeric_limits<streamsize>::max(), '\n');
-            wcout << endl;
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cout << endl;
 
             Algorithm userAlgorithm = static_cast<Algorithm>(userChoice);
             return userAlgorithm;
@@ -86,26 +59,15 @@ Algorithm getCryptoAlgorithm() {
 
 string getFilePath() {
     /* Получение пути файла */
-    wstring inputError = L"Вы ввели неверный путь.";
-    wstring wFilePath;
+    string inputError = "Вы ввели неверный путь.";
+    string wFilePath;
     while (true) {
-        wcout << L"Введите полный путь до файла, путь не должен содержать кириллицу." << endl;
-        
-        OS os = getOs();
-        if (os == OS::Linux) {
-            wcout << L"(/home/usr/.../fileName): ";
-        } else if (os == OS::Windows) {
-            wcout << L"(C:\\Program Files\\...\\file): ";
-        } else if (os == OS::Unknown) {
-            wcout << L"Unknown OS!" << endl;
-        } else {
-            wcout << L"Something wrong (getFilePath function)" << endl;
-        }
+        cout << "Введите путь до файла (/home/usr/.../fileName): ";
 
         try {
-            getline(wcin, wFilePath);
+            getline(cin, wFilePath);
             string filePath(wFilePath.begin(), wFilePath.end());
-            wifstream inFile(filePath);
+            ifstream inFile(filePath);
             if (!inFile) {
                 throw invalid_argument("invalid_path");
             }
@@ -118,19 +80,19 @@ string getFilePath() {
 
 CryptoMode getCryptoMod() {
     /* Пользовательский ввод (выбор действия (шифрование / дешифрование)) */
-    wstring typeError = L"Введите целое число, а не строку.";
-    wstring inputError = L"Введите 1 (шифрование) или 2 (дешифрование).";
+    string typeError = "Введите целое число, а не строку.";
+    string inputError = "Введите 1 (шифрование) или 2 (дешифрование).";
     while (true) {
-        wcout << L"Ваш выбор: ";
+        cout << "Ваш выбор: ";
         int userChoice = 0;
         try {
-            wcin >> userChoice;
+            cin >> userChoice;
             if (userChoice < 1 || userChoice > 2) {
                 throw invalid_argument("invalid_crypto_mod");
             }
-            wcin.clear();
-            wcin.ignore(numeric_limits<streamsize>::max(), '\n');
-            wcout << endl;
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cout << endl;
 
             userChoice--;
             CryptoMode cryptoMode = static_cast<CryptoMode>(userChoice);
@@ -193,22 +155,22 @@ string createModFile(string filePath, const string postscript, const CryptoMode 
     return cryptoFilePath;
 }
 
-wstring getUserPassword(CryptoMode action) {
+string getUserPassword(CryptoMode action) {
     /* Получает пароль пользователя */
-    wstring passwordMismatchError = L"Пароли не совпадают. Попробуйте снова.";
+    string passwordMismatchError = "Пароли не совпадают. Попробуйте снова.";
     while (true) {
         try {
-            wstring userPassword;
+            string userPassword;
             while (userPassword.empty()) {
-                wcout << L"Введите пароль для файла: ";
-                getline(wcin, userPassword);
+                cout << "Введите пароль для файла: ";
+                getline(cin, userPassword);
             }
  
             if (action == CryptoMode::Encryption) {
-                wstring confirmPassword;
+                string confirmPassword;
                 while (confirmPassword.empty()) {
-                    wcout << L"Подтвердите пароль: ";
-                    getline(wcin, confirmPassword);
+                    cout << "Подтвердите пароль: ";
+                    getline(cin, confirmPassword);
                 }
                 if (userPassword != confirmPassword) {
                     throw invalid_argument("mismatch");
@@ -221,45 +183,30 @@ wstring getUserPassword(CryptoMode action) {
     }
 }
 
-bool checkPasswordMatch(string filePath, wstring hash) {
+bool checkPasswordMatch(string filePath, string hash) {
     /* Проверяет совпадают ли хеши */
-    OS os = getOs();
     string hashFilePath;
-    if (os == OS::Linux) {
-        int slashPos = -1;
-        for (int i = 0; i < filePath.length(); i++) {
-            if (filePath[i] == '/') {
-                slashPos = i;
-            }
-        }
-        
-        for (int i = 0; i < filePath.length(); i++) {
-            if (i <= slashPos) {
-                hashFilePath += filePath[i];
-            }
-        }
-    } else if (os == OS::Windows) {
-        int backslashPos = -1;
-        for (int i = 0; i < filePath.length(); i++) {
-            if (filePath[i] == '\\') {
-                backslashPos = i;
-            }
-        }
-
-        for (int i = 0; i < filePath.length(); i++) {
-            if (i <= backslashPos) {
-                hashFilePath += filePath[i];
-            }
+    int slashPos = -1;
+    for (int i = 0; i < filePath.length(); i++) {
+        if (filePath[i] == '/') {
+            slashPos = i;
         }
     }
+    
+    for (int i = 0; i < filePath.length(); i++) {
+        if (i <= slashPos) {
+            hashFilePath += filePath[i];
+        }
+    }
+    
     hashFilePath += "user_hash.txt";
 
-    wifstream inFile(hashFilePath);
+    ifstream inFile(hashFilePath);
 
-    wstring line;
+    string line;
     while (getline(inFile, line)) {
-        wstring nowFilePath;
-        wstring nowHash;
+        string nowFilePath;
+        string nowHash;
 
         bool spaceFound = false;
         
@@ -283,52 +230,36 @@ bool checkPasswordMatch(string filePath, wstring hash) {
     return false;
 }
 
-void addUserHash(string filePath, wstring hash) {
+void addUserHash(string filePath, string hash) {
     /* Добавляем пароль пользователя */
-    OS os = getOs();
     string hashFilePath;
-    if (os == OS::Linux) {
-        int slashPos = -1;
-        for (int i = 0; i < filePath.length(); i++) {
-            if (filePath[i] == '/') {
-                slashPos = i;
-            }
+    int slashPos = -1;
+    for (int i = 0; i < filePath.length(); i++) {
+        if (filePath[i] == '/') {
+            slashPos = i;
         }
+    }
 
-        for (int i = 0; i < filePath.length(); i++) {
-            if (i <= slashPos) {
-                hashFilePath += filePath[i];
-            }
-        }
-    } else if (os == OS::Windows) {
-        int backslashPos = -1;
-        for (int i = 0; i < filePath.length(); i++) {
-            if (filePath[i] == '\\') {
-                backslashPos = i;
-            }
-        }
-
-        for (int i = 0; i < filePath.length(); i++) {
-            if (i <= backslashPos) {
-                hashFilePath += filePath[i];
-            }
+    for (int i = 0; i < filePath.length(); i++) {
+        if (i <= slashPos) {
+            hashFilePath += filePath[i];
         }
     }
     hashFilePath += "user_hash.txt";
 
-    wifstream inFile(hashFilePath);
-    map<wstring, wstring> userData;
+    ifstream inFile(hashFilePath);
+    map<string, string> userData;
     
     bool updated = false;
 
-    wstring line;
+    string line;
     while (getline(inFile, line)) {
-        wstring nowFilePath;
-        wstring nowHash;
+        string nowFilePath;
+        string nowHash;
 
         bool spaceFound = false;
         for (int i = 0; i < line.length(); i++) {
-            if (line[i] == L' ') {
+            if (line[i] == ' ') {
                 spaceFound = true;
             } else if (spaceFound) {
                 nowHash += line[i];
@@ -343,18 +274,18 @@ void addUserHash(string filePath, wstring hash) {
         }
         userData[nowFilePath] = nowHash;
     }
-    wstring wFilePath(filePath.begin(), filePath.end());
+    string wFilePath(filePath.begin(), filePath.end());
     if (!updated) {
         userData[wFilePath] = hash;
     } 
 
-    wofstream outFile(hashFilePath);
+    ofstream outFile(hashFilePath);
     for (auto& [key, val] : userData) {
         outFile << key << " " << val << "\n";
     }
 }
 
-void simpleHash(wstring& userPassword) {
+void simpleHash(string& userPassword) {
     uint64_t hash = 7392;
 
     for (auto& symb : userPassword) {
@@ -362,7 +293,7 @@ void simpleHash(wstring& userPassword) {
     }
     userPassword.clear();
 
-    wstring char16 = L"0123456789abcdef";
+    string char16 = "0123456789abcdef";
     while (hash > 0) {
         int digit = hash % 16;
         userPassword = char16[digit] + userPassword;

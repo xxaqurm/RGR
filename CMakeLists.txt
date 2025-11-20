@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(CryptoCiphers)
+project(comprehensive_data_protection_system)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -24,10 +24,10 @@ add_library(VigenereCipher SHARED src/cryptoAlgorithms/VigenereCipher.cpp)
 target_include_directories(VigenereCipher PUBLIC include)
 
 # === Главный исполняемый файл ===
-add_executable(rgr main.cpp src/utils/menuUtils.cpp)
+add_executable(comprehensive_data_protection_system main.cpp src/utils/menuUtils.cpp)
 
 # Линковка с библиотеками
-target_link_libraries(rgr
+target_link_libraries(comprehensive_data_protection_system
     MatrixCipher
     PlayfairCipher
     VigenereCipher

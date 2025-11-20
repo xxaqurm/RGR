@@ -3,8 +3,9 @@
 #include <iostream>
 #include <limits>
 #include <stdexcept>
-#include <string>
 #include <fstream>
+#include <map>
+#include <cstdint>
 
 using namespace std;
 
@@ -25,26 +26,19 @@ enum class CryptoMode {
     Decryption
 };
 
-enum class OS {
-    Windows,
-    Linux,
-    Unknown
-};
-
 extern "C" {
     void clearScreen();
     void showMenu(const MenuMode mode);
 
     CryptoMode getCryptoMod();
     Algorithm getCryptoAlgorithm();
-    OS getOs();
 
     string createModFile(string filePath, const string postscript, const CryptoMode crypMode);
     string getFilePath();
-    wstring getUserPassword(CryptoMode action);
+    string getUserPassword(CryptoMode action);
 
-    void addUserHash(string filePath, wstring hash);
-    void simpleHash(wstring& userPassword);
+    void addUserHash(string filePath, string hash);
+    void simpleHash(string& userPassword);
 
-    bool checkPasswordMatch(string filePath, wstring hash);
+    bool checkPasswordMatch(string filePath, string hash);
 }
