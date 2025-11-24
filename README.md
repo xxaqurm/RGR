@@ -27,13 +27,13 @@ cd RGR
 
 3. Соберите проект:
 ```bash
-mkdir build
-cd build
+mkdir build && cd build
 cmake ..
 make
 ```
 
 4. Запустите приложение:
 ```bash
+cd bin
 ./comprehensive_data_protection_system
 ```

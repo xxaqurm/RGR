@@ -22,7 +22,7 @@ enum class MenuMode {
 };
 
 enum class CryptoMode {
-    Encryption,
+    Encryption=1,
     Decryption
 };
 

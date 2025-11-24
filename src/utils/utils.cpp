@@ -1,4 +1,4 @@
-#include "menuUtils.hpp"
+#include "utils.hpp"
 
 void clearScreen() {
     system("clear");
@@ -34,26 +34,37 @@ void userInputError(const string errorText, const exception e, bool ignore = tru
 
 Algorithm getCryptoAlgorithm() {
     /* Пользовательский ввод (выбор алгоритма шифрования) */
-    string inputError = "Введите целое число от 0 до 3.";
     while (true) {
         cout << "Введите номер шифра или \"0\" для выхода: ";
         int userChoice = 0;
-        try {
-            cin >> userChoice;
-            if (userChoice < 0 || userChoice > 3) {
-                throw invalid_argument("ivalid_user_choice");
-            }
+        
+        if (!(cin >> userChoice)) {
             cin.clear();
             cin.ignore(numeric_limits<streamsize>::max(), '\n');
-            cout << endl;
-
-            Algorithm userAlgorithm = static_cast<Algorithm>(userChoice);
-            return userAlgorithm;
-        } catch (const ios::failure& e) {
-            userInputError(inputError, e);
-        } catch (const exception& e) {
-            userInputError(inputError, e);
+            cerr << "[ ERROR ] Выбор должен быть целым числом в диапазоне [0-3]\n" << endl;
+            continue;
         }
+
+        char nextChar = cin.peek();
+        if (nextChar != '\n' && nextChar != EOF) {
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cin.clear();
+            cerr << "[ ERROR ] Выбор должен быть целым числом в диапазоне [0-3]\n" << endl;
+            continue;
+        }
+        
+        if (userChoice < 0 || userChoice > 3) {
+            cerr << "[ ERROR ] Выбор пользователя выходит за пределы диапазона [0-3]\n" << endl;
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            continue;
+        }
+
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        cin.clear();
+        cout << endl;
+
+        return static_cast<Algorithm>(userChoice);
     }
 }
 
@@ -63,45 +74,50 @@ string getFilePath() {
     string wFilePath;
     while (true) {
         cout << "Введите путь до файла (/home/usr/.../fileName): ";
-
-        try {
-            getline(cin, wFilePath);
-            string filePath(wFilePath.begin(), wFilePath.end());
-            ifstream inFile(filePath);
-            if (!inFile) {
-                throw invalid_argument("invalid_path");
-            }
-            return filePath;
-        } catch (const exception& e) {
-            userInputError(inputError, e, false);
+        getline(cin, wFilePath);
+        string filePath(wFilePath.begin(), wFilePath.end());
+        ifstream inFile(filePath);
+        if (!inFile) {
+            cerr << "[ ERROR ] Введен неверный путь\n" << endl;
+            continue;
         }
+        return filePath;
     }
 }
 
 CryptoMode getCryptoMod() {
     /* Пользовательский ввод (выбор действия (шифрование / дешифрование)) */
-    string typeError = "Введите целое число, а не строку.";
-    string inputError = "Введите 1 (шифрование) или 2 (дешифрование).";
     while (true) {
-        cout << "Ваш выбор: ";
+        cout << "Выберите действие: ";
         int userChoice = 0;
-        try {
-            cin >> userChoice;
-            if (userChoice < 1 || userChoice > 2) {
-                throw invalid_argument("invalid_crypto_mod");
-            }
+
+        if (!(cin >> userChoice)) {
             cin.clear();
             cin.ignore(numeric_limits<streamsize>::max(), '\n');
-            cout << endl;
-
-            userChoice--;
-            CryptoMode cryptoMode = static_cast<CryptoMode>(userChoice);
-            return cryptoMode;
-        } catch (const ios::failure& e) {
-            userInputError(typeError, e);
-        } catch (const exception& e) {
-            userInputError(inputError, e);
+            cerr << "[ ERROR ] Выбор должен быть целым числом в диапазоне [1-2]\n" << endl;
+            continue;
         }
+
+        char nextChar = cin.peek();
+        if (nextChar != '\n' && nextChar != EOF) {
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cin.clear();
+            cerr << "[ ERROR ] Выбор должен быть целым числом в диапазоне [1-2]\n" << endl;
+            continue;
+        }
+
+        if (userChoice < 1 || userChoice > 2) {
+            cerr << "[ ERROR ] Выбор выходит за пределы диапазона [1-2]\n" << endl;
+            cin.ignore(numeric_limits<streamsize>::max(),'\n');
+            cin.clear();
+            continue;
+        }
+
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        cin.clear();
+        cout << endl;
+
+        return static_cast<CryptoMode>(userChoice);
     }
 }
 
@@ -157,29 +173,30 @@ string createModFile(string filePath, const string postscript, const CryptoMode 
 
 string getUserPassword(CryptoMode action) {
     /* Получает пароль пользователя */
-    string passwordMismatchError = "Пароли не совпадают. Попробуйте снова.";
     while (true) {
-        try {
-            string userPassword;
-            while (userPassword.empty()) {
-                cout << "Введите пароль для файла: ";
-                getline(cin, userPassword);
-            }
- 
-            if (action == CryptoMode::Encryption) {
-                string confirmPassword;
-                while (confirmPassword.empty()) {
-                    cout << "Подтвердите пароль: ";
-                    getline(cin, confirmPassword);
-                }
-                if (userPassword != confirmPassword) {
-                    throw invalid_argument("mismatch");
-                }
-            }
-            return userPassword;
-        } catch (const exception& e) {
-            userInputError(passwordMismatchError, e, false);
+        string userPassword;
+        while (userPassword.empty()) {
+            cout << "Введите пароль для файла: ";
+            getline(cin, userPassword);
         }
+
+        if (action == CryptoMode::Encryption) {
+            string confirmPassword;
+            while (confirmPassword.empty()) {
+                cout << "Подтвердите пароль: ";
+                getline(cin, confirmPassword);
+            }
+            if (userPassword != confirmPassword) {
+                cerr << "[ ERROR ] Пароли не совпадают. Попробуйте еще раз\n" << endl;
+                userPassword.clear();
+                confirmPassword.clear();
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                cin.clear();
+                continue;
+            }
+        }
+        
+        return userPassword;
     }
 }
 
