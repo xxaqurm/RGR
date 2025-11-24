@@ -190,7 +190,6 @@ string getUserPassword(CryptoMode action) {
                 cerr << "[ ERROR ] Пароли не совпадают. Попробуйте еще раз\n" << endl;
                 userPassword.clear();
                 confirmPassword.clear();
-                cin.ignore(numeric_limits<streamsize>::max(), '\n');
                 cin.clear();
                 continue;
             }
@@ -200,19 +199,17 @@ string getUserPassword(CryptoMode action) {
     }
 }
 
-bool checkPasswordMatch(string filePath, string hash) {
+bool checkPasswordMatch(const string& filePath, const string& hash) {
     /* Проверяет совпадают ли хеши */
     string hashFilePath;
-    int slashPos = -1;
-    for (int i = 0; i < filePath.length(); i++) {
-        if (filePath[i] == '/') {
-            slashPos = i;
+    bool slashExist = false;
+    for (int i = filePath.length() - 1; i >= 0; i--) {
+        if (filePath[i] == '/' && !slashExist) {
+            slashExist = true;
         }
-    }
-    
-    for (int i = 0; i < filePath.length(); i++) {
-        if (i <= slashPos) {
-            hashFilePath += filePath[i];
+
+        if (slashExist) {
+            hashFilePath = filePath[i] + hashFilePath;
         }
     }
     
@@ -222,26 +219,33 @@ bool checkPasswordMatch(string filePath, string hash) {
 
     string line;
     while (getline(inFile, line)) {
-        string nowFilePath;
-        string nowHash;
+        string currentFilePath;
+        string currentHash;
 
         bool spaceFound = false;
-        
-        for (auto& symb : line) {
-            if (symb == L' ') {
-                if (spaceFound) {
-                    break;
-                }
+        for (int i = line.length() - 1; i >= 0; i--) {
+            if (line[i] == ' ' && !spaceFound) {
                 spaceFound = true;
-            } else if (spaceFound) {
-                nowHash += symb;
-            } else {
-                nowFilePath += symb;
+                continue;
+            }
+
+            if (spaceFound) {
+                currentFilePath = line[i] + currentFilePath;
             }
         }
-        string narrowFilePath(nowFilePath.begin(), nowFilePath.end());
-        if (narrowFilePath == filePath && nowHash == hash) {
+
+        for (int i = line.length() - 1; i >= 0; i--) {
+            if (line[i] == ' ') {
+                break;
+            }
+            
+            currentHash = line[i] + currentHash;
+        }
+
+        if (currentFilePath == filePath && currentHash == hash) {
             return true;
+        } else if (currentFilePath == filePath && currentHash != hash) {
+            return false;
         }
     }
     return false;
@@ -302,18 +306,20 @@ void addUserHash(string filePath, string hash) {
     }
 }
 
-void simpleHash(string& userPassword) {
-    uint64_t hash = 7392;
+string simpleHash(const string& userPassword) {
+    uint64_t key = 7392;
 
-    for (auto& symb : userPassword) {
-        hash = ((hash << 5) + hash) + (uint64_t)symb;
+    for (const char symb : userPassword) {
+        key = ((key << 5) + key) + static_cast<uint64_t>(symb);
     }
-    userPassword.clear();
-
+    
+    string hash;
     string char16 = "0123456789abcdef";
-    while (hash > 0) {
-        int digit = hash % 16;
-        userPassword = char16[digit] + userPassword;
-        hash /= 16;
+    while (key > 0) {
+        int num = key % 16;
+        hash = char16[num] + hash;
+        key /= 16;
     }
+
+    return hash;
 }

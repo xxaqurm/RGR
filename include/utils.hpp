@@ -36,9 +36,9 @@ extern "C" {
     string createModFile(string filePath, const string postscript, const CryptoMode crypMode);
     string getFilePath();
     string getUserPassword(CryptoMode action);
+    string simpleHash(const string& userPassword);
 
     void addUserHash(string filePath, string hash);
-    void simpleHash(string& userPassword);
 
-    bool checkPasswordMatch(string filePath, string hash);
+    bool checkPasswordMatch(const string& filePath, const string& hash);
 }

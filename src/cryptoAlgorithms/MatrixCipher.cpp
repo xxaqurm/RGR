@@ -103,7 +103,7 @@ void fillCryptoFile(const string filePath, const MatrixArray matrixs) {
 void matrixEncrypt(const string filePath, const string fileEncryptedPath) {
     ifstream inFile(filePath, ios::binary);
     if (!inFile) {
-        cerr << "Ошибка открытия файла: " << string(filePath.begin(), filePath.end()) << endl;
+        cerr << "[ ERROR ] Ошибка открытия файла: " << string(filePath.begin(), filePath.end()) << endl;
         return;
     }
 
@@ -123,7 +123,7 @@ void matrixDecrypt(const string filePath, const string fileDecryptedPath) {
     ifstream inFile(filePath, ios::binary);
 
     if (!inFile) {
-        cerr << "Ошибка открытия файла: " << string(filePath.begin(), filePath.end()) << endl;
+        cerr << "[ ERROR ] Ошибка открытия файла: " << string(filePath.begin(), filePath.end()) << endl;
         return;
     }
 
