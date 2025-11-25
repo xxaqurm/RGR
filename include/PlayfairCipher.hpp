@@ -4,6 +4,7 @@
 #include <vector>
 #include <fstream>
 #include <cstdint>
+#include <limits>
 
 using namespace std;
 
@@ -17,6 +18,14 @@ struct Bigram {
 };
 
 extern "C" {
-    void playfairEncrypt(const string filePath, const string fileEncryptedPath);
-    void playfairDecrypt(const string filePath, const string fileDecryptedPath);
+    ByteArray playfairEncrypt(
+        const string& filePath, 
+        const string& fileEncryptedPath, 
+        const string& userCryptoText 
+    );
+    ByteArray playfairDecrypt(
+        const string& filePath, 
+        const string& fileDecryptedPath, 
+        const string& userCryptoText 
+    );
 }

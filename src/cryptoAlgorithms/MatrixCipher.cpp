@@ -92,49 +92,105 @@ void trimRight(ByteArray& data) {
     }
 }
 
-void fillCryptoFile(const string filePath, const MatrixArray matrixs) {
+ByteArray getCryptoText(const MatrixArray matrixs) {
     ByteArray output = matrixsToBytes(matrixs);
     trimRight(output);
 
-    ofstream outFile(filePath, ios::binary);
-    outFile.write(reinterpret_cast<const char*>(output.data()), output.size());
+    return output;
 }
 
-void matrixEncrypt(const string filePath, const string fileEncryptedPath) {
-    ifstream inFile(filePath, ios::binary);
-    if (!inFile) {
-        cerr << "[ ERROR ] Ошибка открытия файла: " << string(filePath.begin(), filePath.end()) << endl;
-        return;
+ByteArray matrixEncrypt(const string& filePath, const string& fileEncryptedPath, const string& userCryptoText) {
+    ByteArray fileContent;
+    if (filePath == "default" && fileEncryptedPath == "default" && userCryptoText != "default") {
+        for (const uint8_t b : userCryptoText) {
+            fileContent.push_back(b);
+        }
+    } else {
+        ifstream inFile(filePath, ios::binary);
+        if (!inFile) {
+            cerr << "[ ERROR ] Ошибка открытия файла: " << filePath << endl;
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            return ByteArray{};
+        }
+
+        inFile.seekg(0, ios::end);
+        size_t size_ = inFile.tellg();
+        inFile.seekg(0, ios::beg);
+
+        fileContent.resize(size_);
+        inFile.read(reinterpret_cast<char*>(fileContent.data()), size_);
     }
-
-    inFile.seekg(0, ios::end);
-    size_t size = inFile.tellg();
-    inFile.seekg(0, ios::beg);
-
-    ByteArray fileContent(size);
-    inFile.read(reinterpret_cast<char*>(fileContent.data()), size);
 
     MatrixArray spiralMatrixs;
     fillSpiral(fileContent, spiralMatrixs);
-    fillCryptoFile(fileEncryptedPath, spiralMatrixs);
-}
+    ByteArray output = getCryptoText(spiralMatrixs);
 
-void matrixDecrypt(const string filePath, const string fileDecryptedPath) {
-    ifstream inFile(filePath, ios::binary);
-
-    if (!inFile) {
-        cerr << "[ ERROR ] Ошибка открытия файла: " << string(filePath.begin(), filePath.end()) << endl;
-        return;
+    if (filePath == "default" && fileEncryptedPath == "default" && userCryptoText != "default") {
+        return output;
+    } else {
+        ofstream outFile(fileEncryptedPath, ios::binary);
+        if (!outFile) {
+            cerr << "[ ERROR ] Ошибка открытия файла: " << fileEncryptedPath << endl;
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            return ByteArray{};
+        }
+        outFile.write(reinterpret_cast<const char*>(output.data()), output.size());
     }
 
-    inFile.seekg(0, ios::end);
-    size_t size = inFile.tellg();
-    inFile.seekg(0, ios::beg);
+    return ByteArray{};
+}
 
-    ByteArray fileContent(size);
-    inFile.read(reinterpret_cast<char*>(fileContent.data()), size);
+ByteArray matrixDecrypt(const string& filePath, const string& fileDecryptedPath, const string& userCryptoText) {
+    ByteArray fileContent;
+    if (filePath == "default" && fileDecryptedPath == "default" && userCryptoText != "default") {
+        uint8_t b = 0;
+        for (size_t i = 0; i < userCryptoText.length(); i++) {
+            char c = userCryptoText[i];
+            if (c == ' ' || i + 1 == userCryptoText.length()) {
+                if (i + 1 == userCryptoText.length()) {
+                    b = b * 10 + (c - '0');
+                }
+                fileContent.push_back(b);
+                b = 0;
+                continue;
+            }
+            b = b * 10 + (c - '0');
+        }
+    } else {
+        ifstream inFile(filePath, ios::binary);
+        if (!inFile) {
+            cerr << "[ ERROR ] Ошибка открытия файла: " << filePath << endl;
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            return ByteArray{};
+        }
 
+        inFile.seekg(0, ios::end);
+        size_t size_ = inFile.tellg();
+        inFile.seekg(0, ios::beg);
+
+        fileContent.resize(size_);
+        inFile.read(reinterpret_cast<char*>(fileContent.data()), size_);
+    }
+    
     MatrixArray matrixs;
     unrollSpiral(fileContent, matrixs);
-    fillCryptoFile(fileDecryptedPath, matrixs);
+    ByteArray output = getCryptoText(matrixs);
+
+    if (filePath == "default" && fileDecryptedPath == "default" && userCryptoText != "default") {
+        return output;
+    } else {
+        ofstream outFile(fileDecryptedPath, ios::binary);
+        if (!outFile) {
+            cerr << "[ ERROR ] Ошибка открытия файла: " << fileDecryptedPath << endl;
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            return ByteArray{};
+        }
+        outFile.write(reinterpret_cast<const char*>(output.data()), output.size());
+    }
+
+    return ByteArray{};
 }

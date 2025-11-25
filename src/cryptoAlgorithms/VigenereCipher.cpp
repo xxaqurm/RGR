@@ -28,50 +28,92 @@ ByteArray vigenereDecryptBytes(const ByteArray& data, const ByteArray& key) {
     return result;
 }
 
-ByteArray readBinaryFile(const string filePath) {
-    ifstream inFile(filePath, ios::binary);
-    if (!inFile) {
-        cerr << "Ошибка открытия файла: " << string(filePath.begin(), filePath.end()) << endl;
-        return {};
-    }
+ByteArray vigenereEncrypt(const string& filePath, const string& fileEncryptedPath, const string& userCryptoText) {
+    ByteArray fileContent;
+    if (filePath == "default" && fileEncryptedPath == "default" && userCryptoText != "default") {
+        for (const uint8_t b : userCryptoText) {
+            fileContent.push_back(b);
+        }
+    } else {
+        ifstream inFile(filePath, ios::binary);
+        if (!inFile) {
+            cerr << "[ ERROR ] Ошибка открытия файла: " << filePath << endl;
+            return ByteArray{};
+        }
 
-    inFile.seekg(0, ios::end);
-    size_t size = inFile.tellg();
-    inFile.seekg(0, ios::beg);
+        inFile.seekg(0, ios::end);
+        size_t size_ = inFile.tellg();
+        inFile.seekg(0, ios::beg);
 
-    ByteArray buffer(size);
-    inFile.read(reinterpret_cast<char*>(buffer.data()), size);
-    return buffer;
-}
-
-void writeBinaryFile(const string filePath, const ByteArray data) {
-    ofstream outFile(filePath, ios::binary);
-    if (!outFile) {
-        cerr << "Ошибка открытия файла для записи: " << string(filePath.begin(), filePath.end()) << endl;
-        return ;
-    }
-
-    outFile.write(reinterpret_cast<const char*>(data.data()), data.size());
-}
-
-void vigenereEncrypt(const string filePath, const string fileEncryptedPath) {
-    ByteArray content = readBinaryFile(filePath);
-    if (content.empty()) {
-        return;
+        fileContent.resize(size_);
+        inFile.read(reinterpret_cast<char*>(fileContent.data()), size_);
     }
 
     ByteArray key = getKeyBytes();
-    ByteArray encrypted = vigenereEncryptBytes(content, key);
+    ByteArray output = vigenereEncryptBytes(fileContent, key);
 
-    writeBinaryFile(fileEncryptedPath, encrypted);
+    if (filePath == "default" && fileEncryptedPath == "default" && userCryptoText != "default") {
+        return output;
+    } else {
+        ofstream outFile(fileEncryptedPath, ios::binary);
+        if (!outFile) {
+            cerr << "[ ERROR ] Ошибка открытия файла: " << fileEncryptedPath << endl;
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            return ByteArray{};
+        }
+        outFile.write(reinterpret_cast<const char*>(output.data()), output.size());
+    }
+
+    return ByteArray{};
 }
 
-void vigenereDecrypt(const string filePath, const string fileDecryptedPath) {
-    ByteArray content = readBinaryFile(filePath);
-    if (content.empty()) return;
+ByteArray vigenereDecrypt(const string& filePath, const string& fileDecryptedPath, const string& userCryptoText) {
+    ByteArray fileContent;
+    if (filePath == "default" && fileDecryptedPath == "default" && userCryptoText != "default") {
+        uint8_t b = 0;
+        for (size_t i = 0; i < userCryptoText.length(); i++) {
+            char c = userCryptoText[i];
+            if (c == ' ' || i + 1 == userCryptoText.length()) {
+                if (i + 1 == userCryptoText.length()) {
+                    b = b * 10 + (c - '0');
+                }
+                fileContent.push_back(b);
+                b = 0;
+                continue;
+            }
+            b = b * 10 + (c - '0');
+        }
+    } else {
+        ifstream inFile(filePath, ios::binary);
+        if (!inFile) {
+            cerr << "[ ERROR ] Ошибка открытия файла: " << string(filePath.begin(), filePath.end()) << endl;
+            return ByteArray{};
+        }
+
+        inFile.seekg(0, ios::end);
+        size_t size_ = inFile.tellg();
+        inFile.seekg(0, ios::beg);
+
+        fileContent.resize(size_);
+        inFile.read(reinterpret_cast<char*>(fileContent.data()), size_);
+    }
 
     ByteArray key = getKeyBytes();
-    ByteArray decrypted = vigenereDecryptBytes(content, key);
+    ByteArray output = vigenereDecryptBytes(fileContent, key);
 
-    writeBinaryFile(fileDecryptedPath, decrypted);
+    if (filePath == "default" && fileDecryptedPath == "default" && userCryptoText != "default") {
+        return output;
+    } else {
+        ofstream outFile(fileDecryptedPath, ios::binary);
+        if (!outFile) {
+            cerr << "[ ERROR ] Ошибка открытия файла: " << fileDecryptedPath << endl;
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            return ByteArray{};
+        }
+        outFile.write(reinterpret_cast<const char*>(output.data()), output.size());
+    }
+
+    return ByteArray{};
 }

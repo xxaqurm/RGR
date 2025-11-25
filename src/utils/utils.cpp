@@ -14,6 +14,11 @@ void showMenu(const MenuMode mode) {
             cout << "2. Шифр Виженера" << endl;
             cout << "3. Шифр Плейфера" << endl;
             break;
+        case MenuMode::EncryptionIOMode:
+            cout << "Выберите режим ввода и вывода данных:" << endl;
+            cout << "1. Работа через консоль (шифрование/дешифрование текста)" << endl;
+            cout << "2. Работа через файл (шифрование/дешифрование файла)" << endl;
+            break;
         case MenuMode::EncDecMenu:
             cout << "Выберите действие:" << endl;
             cout << "1. Шифрование" << endl;
@@ -39,32 +44,61 @@ Algorithm getCryptoAlgorithm() {
         int userChoice = 0;
         
         if (!(cin >> userChoice)) {
+            cerr << "[ ERROR ] Выбор должен быть целым числом в диапазоне [0-3]\n" << endl;
             cin.clear();
             cin.ignore(numeric_limits<streamsize>::max(), '\n');
-            cerr << "[ ERROR ] Выбор должен быть целым числом в диапазоне [0-3]\n" << endl;
             continue;
         }
 
         char nextChar = cin.peek();
         if (nextChar != '\n' && nextChar != EOF) {
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-            cin.clear();
             cerr << "[ ERROR ] Выбор должен быть целым числом в диапазоне [0-3]\n" << endl;
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
             continue;
         }
         
         if (userChoice < 0 || userChoice > 3) {
-            cerr << "[ ERROR ] Выбор пользователя выходит за пределы диапазона [0-3]\n" << endl;
+            cerr << "[ ERROR ] Выбор выходит за пределы диапазона [0-3]\n" << endl;
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            continue;
+        }
+        
+        cout << endl;
+        return static_cast<Algorithm>(userChoice);
+    }
+}
+
+IOMode getIOMode() {
+    while (true) {
+        cout << "Выберите метод: ";
+        int userChoice = 1;
+
+        if (!(cin >> userChoice)) {
+            cerr << "[ ERROR ] Выбор должен быть целым числом в диапазоне [1-2]\n" << endl;
             cin.clear();
             cin.ignore(numeric_limits<streamsize>::max(), '\n');
             continue;
         }
 
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
-        cin.clear();
-        cout << endl;
+        char nextChar = cin.peek();
+        if (nextChar != '\n' && nextChar != EOF) {
+            cerr << "[ ERROR ] Выбор должен быть целым числом в диапазоне [1-2]\n" << endl;
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            continue;
+        }
 
-        return static_cast<Algorithm>(userChoice);
+        if (userChoice < 1 || userChoice > 2) {
+            cerr << "[ ERROR ] Выбор выходит за пределы диапазона [1-2]\n" << endl;
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            continue;
+        }
+
+        cout << endl;
+        return static_cast<IOMode>(userChoice);
     }
 }
 

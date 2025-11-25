@@ -4,6 +4,7 @@
 #include <fstream>
 #include <vector>
 #include <cstdint>
+#include <limits>
 
 using namespace std;
 
@@ -11,6 +12,14 @@ typedef uint8_t Byte;
 typedef vector<Byte> ByteArray;
 
 extern "C" {
-    void vigenereEncrypt(const string filePath, const string fileEncryptedPath);
-    void vigenereDecrypt(const string filePath, const string fileDecryptedPath);
+    ByteArray vigenereEncrypt(
+        const string& filePath,
+        const string& fileEncryptedPath,
+        const string& userCryptoText
+    );
+    ByteArray vigenereDecrypt(
+        const string& filePath,
+        const string& fileDecryptedPath,
+        const string& userCryptoText
+    );
 }

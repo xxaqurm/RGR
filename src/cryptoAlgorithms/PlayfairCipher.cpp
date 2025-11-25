@@ -15,39 +15,6 @@ ByteArray getKeyBytesPlayfair() {
     return result;
 }
 
-ByteArray readBinaryFilePlayfair(const string& filePath) {
-    ifstream inFile(filePath, ios::binary);
-    if (!inFile) {
-        cerr << "Ошибка открытия файла для чтения: " << filePath << endl;
-        return {};
-    }
-
-    inFile.seekg(0, ios::end);
-    streamoff s = inFile.tellg();
-    if (s < 0) {
-        cerr << "Не удалось определить размер файла: " << filePath << endl;
-        return {};
-    }
-    size_t size = static_cast<size_t>(s);
-    inFile.seekg(0, ios::beg);
-
-    ByteArray content(size);
-    if (size > 0)
-        inFile.read(reinterpret_cast<char*>(content.data()), static_cast<streamsize>(size));
-    return content;
-}
-
-void writeBinaryFilePlayfair(const string& filePath, const ByteArray& data) {
-    ofstream outFile(filePath, ios::binary);
-    if (!outFile) {
-        cerr << "Ошибка открытия файла для записи: " << filePath << endl;
-        return;
-    }
-
-    if (!data.empty())
-        outFile.write(reinterpret_cast<const char*>(data.data()), static_cast<streamsize>(data.size()));
-}
-
 bool findMatch(const ByteArray& bytes, Byte b) {
     for (Byte elm : bytes) {
         if (elm == b) return true;
@@ -236,30 +203,98 @@ ByteArray playfairDecryptBytes(const ByteArray& content, const ByteMatrix& key) 
     return removeSplitterFromContent(result);
 }
 
-void playfairEncrypt(const string filePath, const string fileEncryptedPath) {
-    ByteArray fileContent = readBinaryFilePlayfair(filePath);
-    if (fileContent.empty()) {
-        cerr << "Пустой файл или ошибка чтения: " << filePath << endl;
-        return;
+ByteArray playfairEncrypt(const string& filePath, const string& fileEncryptedPath, const string& userCryptoText) {
+    ByteArray fileContent;
+    if (filePath == "default" && fileEncryptedPath == "default" && userCryptoText != "default") {
+        for (const uint8_t b : userCryptoText) {
+            fileContent.push_back(b);
+        }
+    } else {
+        ifstream inFile(filePath, ios::binary);
+        if (!inFile) {
+            cerr << "[ ERROR ] Ошибка открытия файла: " << filePath << endl;
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            return ByteArray{};
+        }
+
+        inFile.seekg(0, ios::end);
+        size_t size_ = inFile.tellg();
+        inFile.seekg(0, ios::beg);
+
+        fileContent.resize(size_);
+        inFile.read(reinterpret_cast<char*>(fileContent.data()), size_);
     }
 
     ByteArray key = getKeyBytesPlayfair();
     ByteMatrix keyMatrix = genKeyMatrix(key);
-    ByteArray encryptedContent = playfairEncryptBytes(fileContent, keyMatrix);
+    ByteArray output = playfairEncryptBytes(fileContent, keyMatrix);
 
-    writeBinaryFilePlayfair(fileEncryptedPath, encryptedContent);
+    if (filePath == "default" && fileEncryptedPath == "default" && userCryptoText != "default") {
+        return output;
+    } else {
+        ofstream outFile(fileEncryptedPath, ios::binary);
+        if (!outFile) {
+            cerr << "[ ERROR ] Ошибка открытия файла: " << fileEncryptedPath << endl;
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            return ByteArray{};
+        }
+        outFile.write(reinterpret_cast<const char*>(output.data()), output.size());
+    }
+
+    return ByteArray{};
 }
 
-void playfairDecrypt(const string filePath, const string fileDecryptedPath) {
-    ByteArray fileContent = readBinaryFilePlayfair(filePath);
-    if (fileContent.empty()) {
-        cerr << "Пустой файл или ошибка чтения: " << filePath << endl;
-        return;
+ByteArray playfairDecrypt(const string& filePath, const string& fileDecryptedPath, const string& userCryptoText) {
+    ByteArray fileContent;
+    if (filePath == "default" && fileDecryptedPath == "default" && userCryptoText != "default") {
+        uint8_t b = 0;
+        for (size_t i = 0; i < userCryptoText.length(); i++) {
+            char c = userCryptoText[i];
+            if (c == ' ' || i + 1 == userCryptoText.length()) {
+                if (i + 1 == userCryptoText.length()) {
+                    b = b * 10 + (c - '0');
+                }
+                fileContent.push_back(b);
+                b = 0;
+                continue;
+            }
+            b = b * 10 + (c - '0');
+        }
+    } else {
+        ifstream inFile(filePath, ios::binary);
+        if (!inFile) {
+            cerr << "[ ERROR ] Ошибка открытия файла: " << filePath << endl;
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            return ByteArray{};
+        }
+
+        inFile.seekg(0, ios::end);
+        size_t size_ = inFile.tellg();
+        inFile.seekg(0, ios::beg);
+
+        fileContent.resize(size_);
+        inFile.read(reinterpret_cast<char*>(fileContent.data()), size_);
     }
 
     ByteArray key = getKeyBytesPlayfair();
     ByteMatrix keyMatrix = genKeyMatrix(key);
-    ByteArray decryptedContent = playfairDecryptBytes(fileContent, keyMatrix);
+    ByteArray output = playfairDecryptBytes(fileContent, keyMatrix);
 
-    writeBinaryFilePlayfair(fileDecryptedPath, decryptedContent);
+    if (filePath == "default" && fileDecryptedPath == "default" && userCryptoText != "default") {
+        return output;
+    } else {
+        ofstream outFile(fileDecryptedPath, ios::binary);
+        if (!outFile) {
+            cerr << "[ ERROR ] Ошибка открытия файла: " << fileDecryptedPath << endl;
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            return ByteArray{};
+        }
+        outFile.write(reinterpret_cast<const char*>(output.data()), output.size());
+    }
+
+    return ByteArray{};
 }

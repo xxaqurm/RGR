@@ -18,11 +18,17 @@ enum class Algorithm {
 
 enum class MenuMode {
     StartMenu,
+    EncryptionIOMode,
     EncDecMenu
 };
 
+enum class IOMode {
+    Console = 1,
+    File
+};
+
 enum class CryptoMode {
-    Encryption=1,
+    Encryption = 1,
     Decryption
 };
 
@@ -31,6 +37,7 @@ extern "C" {
     void showMenu(const MenuMode mode);
 
     CryptoMode getCryptoMod();
+    IOMode getIOMode();
     Algorithm getCryptoAlgorithm();
 
     string createModFile(string filePath, const string postscript, const CryptoMode crypMode);

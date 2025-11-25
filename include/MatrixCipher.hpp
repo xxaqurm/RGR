@@ -4,6 +4,7 @@
 #include <vector>
 #include <iostream>
 #include <cstdint>
+#include <limits>
 
 using namespace std;
 
@@ -13,6 +14,14 @@ typedef vector<ByteArray> Matrix;
 typedef vector<Matrix> MatrixArray;
 
 extern "C" {
-    void matrixEncrypt(const string filePath, const string fileEncryptedPath);
-    void matrixDecrypt(const string filePath, const string fileDecryptedPath);
+    ByteArray matrixEncrypt(
+        const string& filePath,
+        const string& fileEncryptedPath,
+        const string& userCryptoText
+    );
+    ByteArray matrixDecrypt(
+        const string& filePath,
+        const string& fileDecryptedPath,
+        const string& userCryptoText
+    );
 }
